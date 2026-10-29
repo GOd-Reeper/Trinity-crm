@@ -12,7 +12,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Client, Profile } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadImage } from '@/lib/supabase';
 
 interface LogMeasurementModalProps {
   clients: Client[];
@@ -77,18 +77,8 @@ export default function MeasurementModal({
     try {
       let photoUrl = '';
       if (frontPhoto) {
-        const fileExt = frontPhoto.name.split('.').pop();
-        const filePath = `progress/${clientId}_${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('client-measurements')
-          .upload(filePath, frontPhoto);
-
-        if (!uploadError) {
-          const { data } = supabase.storage.from('client-measurements').getPublicUrl(filePath);
-          photoUrl = data.publicUrl;
-        } else {
-          photoUrl = frontPreview || 'progress_photo_saved';
-        }
+        const res = await uploadImage('client-measurements', frontPhoto, `progress/${clientId}`);
+        photoUrl = res.publicUrl || frontPreview || 'progress_photo_saved';
       }
 
       const { error } = await supabase.from('client_measurements').insert({

@@ -5,9 +5,42 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOi
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export function getStorageUrl(bucket: string, path: string) {
+export type StorageBucket = 
+  | 'class-proofs' 
+  | 'travel-receipts' 
+  | 'client-measurements' 
+  | 'issue-attachments';
+
+export function getStorageUrl(bucket: StorageBucket | string, path: string): string {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`;
 }
 
+export async function uploadImage(
+  bucket: StorageBucket,
+  file: File,
+  folderPrefix: string = ''
+): Promise<{ publicUrl: string; error?: string }> {
+  try {
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const cleanFileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+    const filePath = folderPrefix ? `${folderPrefix}/${cleanFileName}` : cleanFileName;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return { publicUrl: '', error: uploadError.message };
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return { publicUrl: data.publicUrl };
+  } catch (err: any) {
+    return { publicUrl: '', error: err.message || 'Image upload failed' };
+  }
+}

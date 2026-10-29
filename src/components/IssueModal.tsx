@@ -10,7 +10,7 @@ import {
   Send
 } from 'lucide-react';
 import { IssuePriority, Profile } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadImage } from '@/lib/supabase';
 
 interface ReportIssueModalProps {
   employee: Profile;
@@ -55,18 +55,8 @@ export default function ReportIssueModal({
     try {
       let photoUrl = '';
       if (photo) {
-        const fileExt = photo.name.split('.').pop();
-        const filePath = `issues/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('issue-attachments')
-          .upload(filePath, photo);
-
-        if (!uploadError) {
-          const { data } = supabase.storage.from('issue-attachments').getPublicUrl(filePath);
-          photoUrl = data.publicUrl;
-        } else {
-          photoUrl = photoPreview || 'attachment_uploaded';
-        }
+        const res = await uploadImage('issue-attachments', photo, 'issues');
+        photoUrl = res.publicUrl || photoPreview || 'attachment_uploaded';
       }
 
       const { error } = await supabase.from('issues_escalations').insert({

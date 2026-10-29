@@ -14,7 +14,7 @@ import {
   FileCheck
 } from 'lucide-react';
 import { ClassSession, TravelMode } from '@/lib/types';
-import { supabase } from '@/lib/supabase';
+import { supabase, uploadImage } from '@/lib/supabase';
 import { getClassTimeState } from '@/lib/class-time';
 
 interface ClassStarterModalProps {
@@ -83,37 +83,16 @@ export default function ClassStarterModal({
       let selfieUrl = '';
       let receiptUrl = '';
 
-      // Upload selfie to Supabase Storage
+      // Upload selfie to 'class-proofs' bucket
       if (selfiePhoto) {
-        const fileExt = selfiePhoto.name.split('.').pop();
-        const filePath = `selfies/${session.id}_${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('class-proofs')
-          .upload(filePath, selfiePhoto, { upsert: true });
-
-        if (!uploadError) {
-          const { data: pubData } = supabase.storage.from('class-proofs').getPublicUrl(filePath);
-          selfieUrl = pubData.publicUrl;
-        } else {
-          // Fallback to data URL or dummy if storage bucket fails
-          selfieUrl = selfiePreview || 'proof_uploaded';
-        }
+        const res = await uploadImage('class-proofs', selfiePhoto, `selfies/${session.id}`);
+        selfieUrl = res.publicUrl || selfiePreview || 'proof_uploaded';
       }
 
-      // Upload receipt if rapido or uber
+      // Upload receipt to 'travel-receipts' bucket if rapido or uber
       if (receiptPhoto) {
-        const fileExt = receiptPhoto.name.split('.').pop();
-        const filePath = `receipts/${session.id}_${Date.now()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('travel-receipts')
-          .upload(filePath, receiptPhoto, { upsert: true });
-
-        if (!uploadError) {
-          const { data: pubData } = supabase.storage.from('travel-receipts').getPublicUrl(filePath);
-          receiptUrl = pubData.publicUrl;
-        } else {
-          receiptUrl = receiptPreview || 'receipt_uploaded';
-        }
+        const res = await uploadImage('travel-receipts', receiptPhoto, `receipts/${session.id}`);
+        receiptUrl = res.publicUrl || receiptPreview || 'receipt_uploaded';
       }
 
       const effectiveDroppedName = travelMode === 'dropped'

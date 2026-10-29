@@ -137,7 +137,7 @@ export default function EmployeeLoginPage() {
             </div>
             <p className="text-[11px] text-zinc-500 pt-1">
               Admin access?{' '}
-              <Link href="/login/admin" className="text-teal-400 font-semibold hover:underline">
+              <Link href="/a-login" className="text-teal-400 font-semibold hover:underline">
                 Go to Admin Portal
               </Link>
             </p>

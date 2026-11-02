@@ -4,36 +4,25 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   CalendarClock, 
-  Dumbbell, 
   Sparkles, 
-  UserCheck, 
-  AlertCircle, 
-  Clock, 
-  MapPin, 
-  CheckCircle2,
-  CalendarDays
+  CalendarDays,
+  User
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { ClassSession, Profile } from '@/lib/types';
+import { ClassSession } from '@/lib/types';
 import ClassCard from '@/components/ClassCard';
 import { useAuth } from '@/lib/auth-context';
 
 export default function EmployeeClassesPage() {
-  const { user, setUserDirect } = useAuth();
+  const { user } = useAuth();
   const [classes, setClasses] = useState<ClassSession[]>([]);
-  const [allEmployees, setAllEmployees] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentDateLabel, setCurrentDateLabel] = useState('');
 
   const fetchClasses = async (employeeId?: string, dateStr?: string) => {
     setIsLoading(true);
-
     const targetEmpId = employeeId || user?.id;
     const curDate = dateStr || new Date().toISOString().split('T')[0];
-
-    // Fetch all employees in case user wants to switch trainer view
-    const { data: emps } = await supabase.from('profiles').select('*').eq('role', 'employee');
-    if (emps) setAllEmployees(emps);
 
     if (targetEmpId) {
       const { data } = await supabase
@@ -44,19 +33,6 @@ export default function EmployeeClassesPage() {
         .order('start_time', { ascending: true });
 
       if (data) setClasses(data);
-    } else {
-      // If no trainer logged in yet, default to first employee
-      if (emps && emps.length > 0) {
-        setUserDirect(emps[0]);
-        const { data } = await supabase
-          .from('classes')
-          .select('*, client:clients(*), employee:profiles(*)')
-          .eq('employee_id', emps[0].id)
-          .eq('class_date', curDate)
-          .order('start_time', { ascending: true });
-
-        if (data) setClasses(data);
-      }
     }
     setIsLoading(false);
   };
@@ -64,8 +40,26 @@ export default function EmployeeClassesPage() {
   useEffect(() => {
     const now = new Date();
     setCurrentDateLabel(now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }));
-    fetchClasses(user?.id, now.toISOString().split('T')[0]);
+    if (user?.id) {
+      fetchClasses(user.id, now.toISOString().split('T')[0]);
+    } else {
+      setIsLoading(false);
+    }
   }, [user?.id]);
+
+  if (!user) {
+    return (
+      <div className="p-8 text-center bg-white rounded-3xl border border-zinc-200/80 shadow-xs space-y-3">
+        <p className="text-xs font-bold text-zinc-800">Please sign in to view your classes</p>
+        <Link
+          href="/login/employee"
+          className="inline-block px-4 py-2 rounded-xl bg-teal-500 text-zinc-950 font-bold text-xs hover:bg-teal-400 transition-colors"
+        >
+          Sign In
+        </Link>
+      </div>
+    );
+  }
 
   const completedCount = classes.filter((c) => c.status === 'completed').length;
   const inProgressCount = classes.filter((c) => c.status === 'in_progress').length;
@@ -73,37 +67,6 @@ export default function EmployeeClassesPage() {
 
   return (
     <div className="space-y-4">
-      {/* Trainer Switcher Pill for Testing */}
-      <div className="p-2.5 rounded-2xl bg-zinc-950 text-white flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-[10px]">
-            🏋️
-          </div>
-          <div>
-            <p className="font-bold text-zinc-100">{user?.full_name || 'Akash Sharma'}</p>
-            <p className="text-[10px] text-zinc-400">PIN: {user?.pin_hash || '1111'}</p>
-          </div>
-        </div>
-
-        {allEmployees.length > 1 && (
-          <select
-            value={user?.id || ''}
-            onChange={(e) => {
-              const selected = allEmployees.find((emp) => emp.id === e.target.value);
-              if (selected) {
-                setUserDirect(selected);
-                fetchClasses(selected.id);
-              }
-            }}
-            className="bg-zinc-900 border border-zinc-800 text-teal-300 rounded-lg px-2 py-1 text-[11px] font-semibold"
-          >
-            {allEmployees.map((emp) => (
-              <option key={emp.id} value={emp.id}>{emp.full_name}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
       {/* Date Banner & Daily Summary Stats */}
       <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 rounded-3xl p-5 text-white shadow-md relative overflow-hidden">
         <div className="relative z-10 space-y-3">
@@ -147,7 +110,7 @@ export default function EmployeeClassesPage() {
         </div>
         <p className="text-[11px] text-teal-900 leading-relaxed">
           • Class button unlocks at scheduled start time.<br />
-          • Upload selfie & specify travel mode (Rapido/Uber screenshot or drop name).<br />
+          • Upload selfie &amp; specify travel mode (Rapido/Uber screenshot or drop name).<br />
           • <strong>⚠️ Starting &gt;10 min late marks a Half-Day penalty automatically!</strong>
         </p>
       </div>

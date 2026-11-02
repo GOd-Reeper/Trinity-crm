@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  AlertCircle, 
-  Camera, 
-  Upload, 
-  X, 
+import {
+  AlertCircle,
+  Camera,
+  Upload,
+  X,
   CheckCircle2,
   Send
 } from 'lucide-react';
@@ -123,13 +123,12 @@ export default function ReportIssueModal({
                   type="button"
                   key={p}
                   onClick={() => setPriority(p)}
-                  className={`py-1.5 px-2 rounded-xl text-[11px] font-bold capitalize border transition-all ${
-                    priority === p
+                  className={`py-1.5 px-2 rounded-xl text-[11px] font-bold capitalize border transition-all ${priority === p
                       ? p === 'urgent' || p === 'high'
                         ? 'bg-red-500 text-white border-red-500'
                         : 'bg-teal-500 text-zinc-950 border-teal-500'
                       : 'bg-zinc-50 text-zinc-600 border-zinc-200 hover:bg-zinc-100'
-                  }`}
+                    }`}
                 >
                   {p}
                 </button>

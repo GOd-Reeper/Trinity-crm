@@ -30,7 +30,7 @@ export default function AdminEmployeesPage() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [employeeCode, setEmployeeCode] = useState('');
-  const [pin, setPin] = useState('1234');
+  const [pin, setPin] = useState('');
   const [shiftStart, setShiftStart] = useState('09:00');
   const [shiftEnd, setShiftEnd] = useState('18:00');
   const [isFlexible, setIsFlexible] = useState(false);
@@ -105,7 +105,7 @@ export default function AdminEmployeesPage() {
     setPhone('');
     setEmail('');
     setEmployeeCode('');
-    setPin('1234');
+    setPin('');
     setIsFlexible(false);
   };
 
@@ -241,7 +241,7 @@ export default function AdminEmployeesPage() {
                     type="text"
                     required
                     maxLength={6}
-                    placeholder="e.g. 1111"
+                    placeholder="Enter PIN"
                     value={pin}
                     onChange={(e) => setPin(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-xl focus:ring-2 focus:ring-teal-500 font-mono font-bold"
@@ -254,7 +254,7 @@ export default function AdminEmployeesPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Akash Sharma"
+                  placeholder="Enter employee full name"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-xl focus:ring-2 focus:ring-teal-500"
@@ -267,7 +267,7 @@ export default function AdminEmployeesPage() {
                   <input
                     type="tel"
                     required
-                    placeholder="e.g. 9876543211"
+                    placeholder="Enter phone number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-xl focus:ring-2 focus:ring-teal-500"
@@ -277,7 +277,7 @@ export default function AdminEmployeesPage() {
                   <label className="block text-xs font-bold text-zinc-800 mb-1">Email (Optional)</label>
                   <input
                     type="email"
-                    placeholder="e.g. akash@trinity.com"
+                    placeholder="Enter email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-xl focus:ring-2 focus:ring-teal-500"

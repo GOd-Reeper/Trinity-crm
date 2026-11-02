@@ -15,7 +15,7 @@ import { useAuth } from '@/lib/auth-context';
 export default function DedicatedAdminLoginPage() {
   const router = useRouter();
   const { loginAdmin } = useAuth();
-  const [identifier, setIdentifier] = useState('ADMIN');
+  const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,7 @@ export default function DedicatedAdminLoginPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. ADMIN or 9876543210"
+                  placeholder="Enter admin code or phone"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
@@ -83,7 +83,7 @@ export default function DedicatedAdminLoginPage() {
                   type="password"
                   required
                   maxLength={6}
-                  placeholder="Enter 4-digit PIN (Default: 1234)"
+                  placeholder="Enter security PIN"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
@@ -117,4 +117,3 @@ export default function DedicatedAdminLoginPage() {
     </div>
   );
 }
-

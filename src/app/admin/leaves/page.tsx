@@ -189,7 +189,7 @@ export default function AdminLeavesPage() {
       {rejectingApplication && (
         <RejectLeaveModal
           application={rejectingApplication}
-          adminId={user?.id || '11111111-1111-1111-1111-111111111111'}
+          adminId={user?.id || ''}
           isOpen={!!rejectingApplication}
           onClose={() => setRejectingApplication(null)}
           onSuccess={fetchLeaves}

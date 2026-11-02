@@ -8,15 +8,14 @@ import {
   Lock, 
   User, 
   ArrowLeft, 
-  Loader2, 
-  Dumbbell 
+  Loader2 
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export default function EmployeeLoginPage() {
   const router = useRouter();
   const { loginEmployee } = useAuth();
-  const [identifier, setIdentifier] = useState('TRN-001');
+  const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,21 +53,21 @@ export default function EmployeeLoginPage() {
             <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mx-auto">
               <UserCheck className="w-6 h-6" />
             </div>
-            <h1 className="text-xl font-black tracking-tight text-white">Trainer Quick PIN Login</h1>
-            <p className="text-xs text-zinc-400">Trinity Fitness Employee Mobile Hub</p>
+            <h1 className="text-xl font-black tracking-tight text-white">Staff Login</h1>
+            <p className="text-xs text-zinc-400">Trinity Fitness Employee Portal</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Trainer Code or Phone
+                Employee Code or Phone
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   required
-                  placeholder="e.g. TRN-001 or 9876543211"
+                  placeholder="Enter employee code or phone"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
@@ -86,7 +85,7 @@ export default function EmployeeLoginPage() {
                   type="password"
                   required
                   maxLength={6}
-                  placeholder="Enter 4-digit PIN (Akash: 1111)"
+                  placeholder="Enter 4-digit PIN"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
@@ -111,40 +110,12 @@ export default function EmployeeLoginPage() {
                   <span>Logging in...</span>
                 </>
               ) : (
-                <span>Access Trainer App</span>
+                <span>Access Portal</span>
               )}
             </button>
           </form>
-
-          {/* Quick preset chips */}
-          <div className="pt-2 text-center border-t border-zinc-800 space-y-2">
-            <p className="text-[10px] text-zinc-500 font-semibold uppercase">Quick Fill Preset</p>
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => { setIdentifier('TRN-001'); setPin('1111'); }}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700"
-              >
-                Akash (1111)
-              </button>
-              <button
-                type="button"
-                onClick={() => { setIdentifier('TRN-002'); setPin('2222'); }}
-                className="px-2.5 py-1 text-[11px] rounded-lg bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700"
-              >
-                Nitin (2222)
-              </button>
-            </div>
-            <p className="text-[11px] text-zinc-500 pt-1">
-              Admin access?{' '}
-              <Link href="/a-login" className="text-teal-400 font-semibold hover:underline">
-                Go to Admin Portal
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-

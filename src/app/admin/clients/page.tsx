@@ -334,7 +334,7 @@ export default function AdminClientsPage() {
                   <input
                     type="tel"
                     required
-                    placeholder="e.g. 9123456780"
+                    placeholder="Enter phone number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-xl focus:ring-2 focus:ring-teal-500"

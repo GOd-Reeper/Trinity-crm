@@ -49,8 +49,10 @@ export default function EmployeeBottomNav() {
         {/* User Pill & Switch / Logout */}
         <div className="flex items-center gap-2">
           <div className="text-right">
-            <p className="text-xs font-semibold text-zinc-100 leading-none">{user?.full_name || 'Trainer'}</p>
-            <p className="text-[9px] text-zinc-400 mt-0.5">{user?.employee_code || 'TRN-001'}</p>
+            <p className="text-xs font-semibold text-zinc-100 leading-none">{user?.full_name || 'Staff'}</p>
+            {user?.employee_code && (
+              <p className="text-[9px] text-zinc-400 mt-0.5">{user.employee_code}</p>
+            )}
           </div>
           <button
             onClick={handleLogout}

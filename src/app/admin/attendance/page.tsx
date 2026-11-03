@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { EmployeeAttendance, Profile } from '@/lib/types';
+import { getTodayIST, formatDateIST, formatTimeOnlyIST } from '@/lib/time-utils';
 
 export default function AdminAttendancePage() {
   const [attendanceLogs, setAttendanceLogs] = useState<EmployeeAttendance[]>([]);
@@ -23,7 +24,7 @@ export default function AdminAttendancePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
+    setSelectedDate(getTodayIST());
   }, []);
 
   const fetchAttendance = async () => {
@@ -151,7 +152,7 @@ export default function AdminAttendancePage() {
                           ({log.employee?.employee_code})
                         </span>
                         <span className="text-xs text-zinc-400">•</span>
-                        <span className="text-xs text-zinc-600 font-medium">Date: {log.attendance_date}</span>
+                        <span className="text-xs text-zinc-600 font-medium">Date: {formatDateIST(log.attendance_date)}</span>
                       </div>
 
                       {/* Timestamps */}
@@ -159,16 +160,16 @@ export default function AdminAttendancePage() {
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5 text-teal-600" />
                           Punch In:{' '}
-                          <strong className="text-zinc-900">
-                            {log.punch_in_time ? new Date(log.punch_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                          <strong className="text-zinc-900 font-bold">
+                            {formatTimeOnlyIST(log.punch_in_time)}
                           </strong>
                         </span>
 
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5 text-zinc-400" />
                           Punch Out:{' '}
-                          <strong className="text-zinc-900">
-                            {log.punch_out_time ? new Date(log.punch_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Still on shift'}
+                          <strong className="text-zinc-900 font-bold">
+                            {log.punch_out_time ? formatTimeOnlyIST(log.punch_out_time) : 'Still on shift'}
                           </strong>
                         </span>
 

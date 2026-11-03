@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { LeaveApplication } from '@/lib/types';
 import { ApplyLeaveModal } from '@/components/LeaveModal';
 import { useAuth } from '@/lib/auth-context';
+import { formatDateIST } from '@/lib/time-utils';
 
 export default function EmployeeLeavesPage() {
   const { user } = useAuth();
@@ -119,7 +120,7 @@ export default function EmployeeLeavesPage() {
 
                 <div className="flex items-center gap-2 text-xs font-bold text-zinc-900">
                   <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                  <span>{item.from_date} → {item.to_date}</span>
+                  <span>{formatDateIST(item.from_date)} → {formatDateIST(item.to_date)}</span>
                 </div>
 
                 <p className="text-xs text-zinc-600 bg-zinc-50 p-3 rounded-2xl border border-zinc-100 italic leading-relaxed">

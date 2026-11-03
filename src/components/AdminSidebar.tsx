@@ -16,7 +16,8 @@ import {
   X, 
   Dumbbell,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -28,6 +29,13 @@ const navItems = [
   { name: 'Attendance & GPS', href: '/admin/attendance', icon: MapPin },
   { name: 'Leave Requests', href: '/admin/leaves', icon: CalendarOff },
   { name: 'Issue Escalations', href: '/admin/issues', icon: AlertCircle },
+];
+
+const mobileBottomTabs = [
+  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true },
+  { name: 'Clients', href: '/admin/clients', icon: Users, exact: false },
+  { name: 'Classes', href: '/admin/classes', icon: CalendarDays, exact: false },
+  { name: 'Attendance', href: '/admin/attendance', icon: MapPin, exact: false },
 ];
 
 export default function AdminSidebar() {
@@ -57,6 +65,7 @@ export default function AdminSidebar() {
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white"
+          aria-label="Toggle Navigation Drawer"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -70,7 +79,7 @@ export default function AdminSidebar() {
         />
       )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar Drawer Container */}
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-zinc-950 text-zinc-200 border-r border-zinc-800 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
@@ -112,7 +121,7 @@ export default function AdminSidebar() {
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+            const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -144,14 +153,44 @@ export default function AdminSidebar() {
           </Link>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-xl transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-zinc-400 hover:text-red-400 hover:bg-zinc-900 rounded-xl transition-colors cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
           </button>
         </div>
       </aside>
+
+      {/* Mobile Bottom Quick-Bar */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-950/95 backdrop-blur-md border-t border-zinc-800/90 py-1.5 px-2 flex items-center justify-around shadow-2xl">
+        {mobileBottomTabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition-all ${
+                isActive ? 'text-teal-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <div className={`p-1 rounded-lg ${isActive ? 'bg-teal-500/10' : ''}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <span className="text-[10px] mt-0.5 tracking-tight">{tab.name}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-zinc-400 hover:text-white"
+        >
+          <div className="p-1 rounded-lg">
+            <MoreHorizontal className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] mt-0.5 tracking-tight">More</span>
+        </button>
+      </nav>
     </>
   );
 }
-

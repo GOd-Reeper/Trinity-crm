@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { LeaveApplication } from '@/lib/types';
 import { RejectLeaveModal } from '@/components/LeaveModal';
 import { useAuth } from '@/lib/auth-context';
+import { formatDateIST } from '@/lib/time-utils';
 
 export default function AdminLeavesPage() {
   const { user } = useAuth();
@@ -110,7 +111,7 @@ export default function AdminLeavesPage() {
                   <p className="text-[10px] font-bold text-zinc-400 uppercase">Duration</p>
                   <p className="font-bold text-zinc-900 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-teal-600" />
-                    {leave.from_date} → {leave.to_date}
+                    {formatDateIST(leave.from_date)} → {formatDateIST(leave.to_date)}
                   </p>
                 </div>
 
@@ -160,7 +161,7 @@ export default function AdminLeavesPage() {
                   <span className="text-xs text-zinc-400">({leave.leave_type})</span>
                   <span className="text-xs text-zinc-400">•</span>
                   <span className="text-xs text-zinc-600 font-medium">
-                    {leave.from_date} to {leave.to_date}
+                    {formatDateIST(leave.from_date)} to {formatDateIST(leave.to_date)}
                   </span>
                 </div>
                 <p className="text-xs text-zinc-600 line-clamp-1 italic">&quot;{leave.description}&quot;</p>

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ClassSession, LeaveApplication, IssueEscalation } from '@/lib/types';
+import { getTodayIST, formatDateIST, formatTime12Hour } from '@/lib/time-utils';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -104,7 +105,7 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    const curDate = new Date().toISOString().split('T')[0];
+    const curDate = getTodayIST();
     setTodayStr(curDate);
     fetchDashboardData(curDate);
   }, []);
@@ -229,9 +230,9 @@ export default function AdminDashboardPage() {
                   className="p-3.5 rounded-2xl bg-white border border-zinc-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-teal-500/30 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 font-bold flex flex-col items-center justify-center text-[10px] leading-tight shrink-0">
-                      <span>{session.start_time?.slice(0, 5)}</span>
-                      <span className="text-[9px] text-teal-500">1 HR</span>
+                    <div className="w-14 h-12 rounded-xl bg-teal-50 text-teal-800 font-bold flex flex-col items-center justify-center text-[10px] leading-tight shrink-0 border border-teal-200">
+                      <span className="font-extrabold">{formatTime12Hour(session.start_time)}</span>
+                      <span className="text-[8px] text-teal-600 font-bold">1 HR</span>
                     </div>
 
                     <div>
@@ -293,7 +294,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-500">
-                      {leave.from_date} to {leave.to_date}
+                      {formatDateIST(leave.from_date)} to {formatDateIST(leave.to_date)}
                     </p>
                     <p className="text-[11px] text-zinc-600 italic line-clamp-1">&quot;{leave.description}&quot;</p>
                   </div>

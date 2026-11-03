@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { IssueEscalation } from '@/lib/types';
+import { formatDateTimeIST } from '@/lib/time-utils';
 
 export default function AdminIssuesPage() {
   const [issues, setIssues] = useState<IssueEscalation[]>([]);
@@ -126,7 +127,7 @@ export default function AdminIssuesPage() {
 
             <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
               <span className="text-[10px] text-zinc-400">
-                By {issue.employee?.full_name || 'Staff'}
+                By {issue.employee?.full_name || 'Staff'} • {formatDateTimeIST(issue.created_at)}
               </span>
 
               {issue.status !== 'resolved' && (

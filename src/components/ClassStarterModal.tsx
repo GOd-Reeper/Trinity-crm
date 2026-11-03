@@ -16,6 +16,8 @@ import {
 import { ClassSession, TravelMode } from '@/lib/types';
 import { supabase, uploadImage } from '@/lib/supabase';
 import { getClassTimeState } from '@/lib/class-time';
+import { formatTime12Hour, formatTimeRange12Hour } from '@/lib/time-utils';
+import PhotoCaptureInput from './PhotoCaptureInput';
 
 interface ClassStarterModalProps {
   session: ClassSession;
@@ -46,22 +48,6 @@ export default function ClassStarterModal({
   const timeState = getClassTimeState(session);
   const isLatePenalty = timeState.isLate;
   const diffMinutes = timeState.lateMinutes;
-
-  const handleSelfieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelfiePhoto(file);
-      setSelfiePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setReceiptPhoto(file);
-      setReceiptPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,7 +146,7 @@ export default function ClassStarterModal({
               <div>
                 <p className="text-xs font-bold">Session Expired / Window Closed</p>
                 <p className="text-[11px] text-red-700 mt-0.5 leading-relaxed">
-                  Scheduled for {session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}. This class was not started during its scheduled 1-hour window and cannot be started anymore.
+                  Scheduled for {formatTimeRange12Hour(session.start_time, session.end_time)} (IST). This class was not started during its scheduled 1-hour window and cannot be started anymore.
                 </p>
               </div>
             </div>
@@ -170,7 +156,7 @@ export default function ClassStarterModal({
               <div>
                 <p className="text-xs font-bold">Late Start Detected (+{diffMinutes}m late)</p>
                 <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                  Scheduled for {session.start_time?.slice(0, 5)}. Exceeding the 10-minute threshold triggers an automatic <strong>Half-Day Penalty</strong>.
+                  Scheduled for {formatTime12Hour(session.start_time)} (IST). Exceeding the 10-minute threshold triggers an automatic <strong>Half-Day Penalty</strong>.
                 </p>
               </div>
             </div>
@@ -178,42 +164,26 @@ export default function ClassStarterModal({
             <div className="p-3 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 flex items-center gap-2.5">
               <Clock className="w-4 h-4 text-teal-600 shrink-0" />
               <p className="text-xs font-medium">
-                Scheduled: <span className="font-bold">{session.start_time?.slice(0, 5)} - {session.end_time?.slice(0, 5)}</span> • On-time session ({diffMinutes}m elapsed)
+                Scheduled: <span className="font-bold">{formatTimeRange12Hour(session.start_time, session.end_time)} (IST)</span> • On-time session ({diffMinutes}m elapsed)
               </p>
             </div>
           )}
 
-          {/* 1. Selfie / Proof Photo */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-900 mb-1.5">
-              1. Take Start Selfie / Proof Photo <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center gap-3">
-              <label className="flex-1 cursor-pointer flex flex-col items-center justify-center p-4 border-2 border-dashed border-teal-300 rounded-xl bg-teal-50/50 hover:bg-teal-50 transition-colors text-center">
-                <Camera className="w-6 h-6 text-teal-600 mb-1" />
-                <span className="text-xs font-semibold text-teal-900">
-                  {selfiePhoto ? 'Replace Photo' : 'Capture / Upload Photo'}
-                </span>
-                <span className="text-[10px] text-zinc-500">Camera or Gallery</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  onChange={handleSelfieChange}
-                  className="hidden"
-                />
-              </label>
-              {selfiePreview && (
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-zinc-300 shrink-0 shadow-xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={selfiePreview} alt="Selfie preview" className="w-full h-full object-cover" />
-                  <span className="absolute bottom-1 right-1 bg-teal-600 text-white p-0.5 rounded-full">
-                    <CheckCircle2 className="w-3 h-3" />
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* 1. Selfie / Proof Photo with Direct Camera & Upload */}
+          <PhotoCaptureInput
+            label="1. Take Start Selfie / Proof Photo"
+            required
+            value={selfiePhoto}
+            previewUrl={selfiePreview}
+            onChange={(file, url) => {
+              setSelfiePhoto(file);
+              setSelfiePreview(url);
+            }}
+            captureMode="user"
+            cameraButtonLabel="Click Selfie (Camera)"
+            uploadButtonLabel="Upload Photo"
+            helperText="Open camera to snap live selfie or select from gallery"
+          />
 
           {/* 2. Travel Mode Selection */}
           <div>
@@ -277,30 +247,22 @@ export default function ClassStarterModal({
 
           {/* Conditional Travel Proof: Rapido or Uber requires Screenshot */}
           {(travelMode === 'rapido' || travelMode === 'uber') && (
-            <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200 space-y-2">
-              <label className="block text-xs font-bold text-zinc-900">
-                Upload {travelMode === 'rapido' ? 'Rapido' : 'Uber'} Fare Screenshot <span className="text-red-500">*</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 p-3 border border-zinc-300 rounded-lg bg-white hover:bg-zinc-50 transition-colors">
-                  <Upload className="w-4 h-4 text-zinc-600" />
-                  <span className="text-xs font-medium text-zinc-700">
-                    {receiptPhoto ? 'Change Screenshot' : 'Select Ride Screenshot'}
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleReceiptChange}
-                    className="hidden"
-                  />
-                </label>
-                {receiptPreview && (
-                  <div className="w-14 h-14 rounded-lg overflow-hidden border border-zinc-300 shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={receiptPreview} alt="Receipt preview" className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
+            <div className="p-3.5 rounded-2xl bg-zinc-50 border border-zinc-200 space-y-2">
+              <PhotoCaptureInput
+                label={`Upload ${travelMode === 'rapido' ? 'Rapido' : 'Uber'} Fare Screenshot`}
+                required
+                value={receiptPhoto}
+                previewUrl={receiptPreview}
+                onChange={(file, url) => {
+                  setReceiptPhoto(file);
+                  setReceiptPreview(url);
+                }}
+                captureMode="environment"
+                cameraButtonLabel="Click Photo"
+                uploadButtonLabel="Select Screenshot"
+                helperText="Upload ride receipt screenshot or snap a photo"
+                compact
+              />
             </div>
           )}
 

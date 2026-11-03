@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { ClassSession } from '@/lib/types';
 import ClassCard from '@/components/ClassCard';
 import { useAuth } from '@/lib/auth-context';
+import { getTodayIST } from '@/lib/time-utils';
 
 export default function EmployeeClassesPage() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export default function EmployeeClassesPage() {
   const fetchClasses = async (employeeId?: string, dateStr?: string) => {
     setIsLoading(true);
     const targetEmpId = employeeId || user?.id;
-    const curDate = dateStr || new Date().toISOString().split('T')[0];
+    const curDate = dateStr || getTodayIST();
 
     if (targetEmpId) {
       const { data } = await supabase
@@ -38,10 +39,18 @@ export default function EmployeeClassesPage() {
   };
 
   useEffect(() => {
+    const todayStr = getTodayIST();
     const now = new Date();
-    setCurrentDateLabel(now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }));
+    setCurrentDateLabel(
+      new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'long',
+        month: 'short',
+        day: 'numeric',
+      }).format(now)
+    );
     if (user?.id) {
-      fetchClasses(user.id, now.toISOString().split('T')[0]);
+      fetchClasses(user.id, todayStr);
     } else {
       setIsLoading(false);
     }

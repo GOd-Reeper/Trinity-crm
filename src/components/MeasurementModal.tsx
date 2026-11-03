@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Client, Profile } from '@/lib/types';
 import { supabase, uploadImage } from '@/lib/supabase';
+import PhotoCaptureInput from './PhotoCaptureInput';
 
 interface LogMeasurementModalProps {
   clients: Client[];
@@ -53,14 +54,6 @@ export default function MeasurementModal({
   }, []);
 
   if (!isOpen) return null;
-
-  const handleFrontPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFrontPhoto(file);
-      setFrontPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,30 +265,20 @@ export default function MeasurementModal({
             </div>
           </div>
 
-          {/* Progress Photo */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-900 mb-1.5">Progress Photo</label>
-            <div className="flex items-center gap-3">
-              <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 p-3 border border-dashed border-zinc-300 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors">
-                <Camera className="w-4 h-4 text-zinc-600" />
-                <span className="text-xs font-medium text-zinc-700">
-                  {frontPhoto ? 'Replace Photo' : 'Upload Client Photo'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFrontPhoto}
-                  className="hidden"
-                />
-              </label>
-              {frontPreview && (
-                <div className="w-14 h-14 rounded-xl overflow-hidden border border-zinc-300 shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={frontPreview} alt="Client progress" className="w-full h-full object-cover" />
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Progress Photo with Click Photo (Camera) & Upload */}
+          <PhotoCaptureInput
+            label="Client Progress Photo"
+            value={frontPhoto}
+            previewUrl={frontPreview}
+            onChange={(file, url) => {
+              setFrontPhoto(file);
+              setFrontPreview(url);
+            }}
+            captureMode="environment"
+            cameraButtonLabel="Click Photo (Camera)"
+            uploadButtonLabel="Upload from Gallery"
+            helperText="Capture client progress photo or select from device files"
+          />
 
           {/* Trainer Observations */}
           <div>

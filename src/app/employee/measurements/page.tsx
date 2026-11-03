@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { Client, ClientMeasurement } from '@/lib/types';
 import MeasurementModal from '@/components/MeasurementModal';
 import { useAuth } from '@/lib/auth-context';
+import { formatDateIST } from '@/lib/time-utils';
 
 export default function EmployeeMeasurementsPage() {
   const { user } = useAuth();
@@ -170,7 +171,7 @@ export default function EmployeeMeasurementsPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-[11px] text-zinc-500">
-                  <span>Date: {m.measurement_date}</span>
+                  <span>Date: {formatDateIST(m.measurement_date)}</span>
                   {m.waist_cm && <span>Waist: {m.waist_cm}cm</span>}
                   {m.chest_cm && <span>Chest: {m.chest_cm}cm</span>}
                 </div>

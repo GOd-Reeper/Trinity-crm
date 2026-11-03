@@ -1,9 +1,13 @@
 import { ClassSession } from './types';
+import { formatTime12Hour, formatTimeRange12Hour } from './time-utils';
 
 export interface ClassTimeState {
   scheduledStart: Date;
   scheduledEnd: Date;
   now: Date;
+  formattedStart12: string;        // e.g. "06:00 PM"
+  formattedEnd12: string;          // e.g. "07:00 PM"
+  formattedRange12: string;        // e.g. "06:00 PM - 07:00 PM"
   isUpcoming: boolean;             // Before start_time
   timeUntilStartFormatted: string; // e.g. "in 35m"
   canStart: boolean;               // Between start_time and end_time (status == 'scheduled')
@@ -32,6 +36,10 @@ export function getClassTimeState(session: ClassSession): ClassTimeState {
   // Parse using local date and time strings
   const scheduledStart = parseLocalDateTime(session.class_date, session.start_time);
   const scheduledEnd = parseLocalDateTime(session.class_date, session.end_time);
+
+  const formattedStart12 = formatTime12Hour(session.start_time);
+  const formattedEnd12 = formatTime12Hour(session.end_time);
+  const formattedRange12 = formatTimeRange12Hour(session.start_time, session.end_time);
 
   const nowMs = now.getTime();
   const startMs = scheduledStart.getTime();
@@ -98,6 +106,9 @@ export function getClassTimeState(session: ClassSession): ClassTimeState {
     scheduledStart,
     scheduledEnd,
     now,
+    formattedStart12,
+    formattedEnd12,
+    formattedRange12,
     isUpcoming,
     timeUntilStartFormatted,
     canStart,
@@ -111,4 +122,3 @@ export function getClassTimeState(session: ClassSession): ClassTimeState {
     },
   };
 }
-

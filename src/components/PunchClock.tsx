@@ -15,6 +15,7 @@ import {
 import { getCurrentCoordinates, GeoLocationResult } from '@/lib/geo';
 import { EmployeeAttendance, Profile } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import { getTodayIST, formatTimeOnlyIST, formatTimeRange12Hour } from '@/lib/time-utils';
 
 interface PunchClockProps {
   employee: Profile;
@@ -34,20 +35,30 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
   const [todayDateStr, setTodayDateStr] = useState<string>('');
   const [currentDateFormatted, setCurrentDateFormatted] = useState<string>('');
 
-  // Live digital clock
+  // Live digital clock in IST
   useEffect(() => {
+    const todayStr = getTodayIST();
+    setTodayDateStr(todayStr);
+
     const now = new Date();
-    setTodayDateStr(now.toISOString().split('T')[0]);
-    setCurrentDateFormatted(now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' }));
+    setCurrentDateFormatted(
+      new Intl.DateTimeFormat('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      }).format(now)
+    );
 
     const updateTime = () => {
       setCurrentTime(
-        new Date().toLocaleTimeString('en-US', {
+        new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Kolkata',
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
           hour12: true,
-        })
+        }).format(new Date())
       );
     };
     updateTime();
@@ -58,7 +69,7 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
   // Fetch today's attendance record
   const fetchAttendance = async (dateStr?: string) => {
     setIsLoading(true);
-    const dStr = dateStr || todayDateStr || new Date().toISOString().split('T')[0];
+    const dStr = dateStr || todayDateStr || getTodayIST();
     const { data, error } = await supabase
       .from('employee_attendance')
       .select('*')
@@ -75,7 +86,7 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
   };
 
   useEffect(() => {
-    const curDate = new Date().toISOString().split('T')[0];
+    const curDate = getTodayIST();
     fetchAttendance(curDate);
   }, [employee.id]);
 
@@ -185,7 +196,7 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
             {currentDateFormatted || 'Today'}
           </span>
           <p className="text-[10px] text-zinc-400 mt-0.5">
-            Shift: {employee.shift_start_time || '09:00'} - {employee.shift_end_time || '18:00'}
+            Shift: {formatTimeRange12Hour(employee.shift_start_time || '09:00', employee.shift_end_time || '18:00')} (IST)
           </p>
         </div>
       </div>
@@ -227,7 +238,7 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
               <Clock className="w-3 h-3 text-teal-600" /> Punch In
             </span>
             <p className="text-sm font-extrabold text-zinc-950">
-              {new Date(todayAttendance.punch_in_time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {formatTimeOnlyIST(todayAttendance.punch_in_time)}
             </p>
             {todayAttendance.punch_in_location_name && (
               <p className="text-[10px] text-zinc-500 truncate flex items-center gap-1">
@@ -242,9 +253,7 @@ export default function PunchClock({ employee, onAttendanceUpdated }: PunchClock
               <Clock className="w-3 h-3 text-zinc-500" /> Punch Out
             </span>
             <p className="text-sm font-extrabold text-zinc-950">
-              {hasPunchedOut
-                ? new Date(todayAttendance.punch_out_time!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '--:--'}
+              {hasPunchedOut ? formatTimeOnlyIST(todayAttendance.punch_out_time) : '--:--'}
             </p>
             <p className="text-[10px] text-zinc-500">
               {hasPunchedOut ? `Verified with PIN` : 'Pending shift end'}

@@ -20,6 +20,7 @@ import { ClassSession } from '@/lib/types';
 import ClassStarterModal from './ClassStarterModal';
 import { supabase } from '@/lib/supabase';
 import { getClassTimeState, ClassTimeState } from '@/lib/class-time';
+import { formatTime12Hour } from '@/lib/time-utils';
 
 interface ClassCardProps {
   session: ClassSession;
@@ -86,8 +87,8 @@ export default function ClassCard({ session, onRefresh }: ClassCardProps) {
   const isScheduled = session.status === 'scheduled' && !timeState?.isExpiredMissed;
   const canStart = timeState?.canStart ?? false;
 
-  const formattedStartTime = session.start_time ? session.start_time.slice(0, 5) : '';
-  const formattedEndTime = session.end_time ? session.end_time.slice(0, 5) : '';
+  const formattedStartTime = formatTime12Hour(session.start_time);
+  const formattedEndTime = formatTime12Hour(session.end_time);
 
   return (
     <>

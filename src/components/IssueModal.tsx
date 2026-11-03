@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { IssuePriority, Profile } from '@/lib/types';
 import { supabase, uploadImage } from '@/lib/supabase';
+import PhotoCaptureInput from './PhotoCaptureInput';
 
 interface ReportIssueModalProps {
   employee: Profile;
@@ -35,14 +36,6 @@ export default function ReportIssueModal({
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setPhoto(file);
-      setPhotoPreview(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,30 +155,20 @@ export default function ReportIssueModal({
             />
           </div>
 
-          {/* Photo attachment */}
-          <div>
-            <label className="block text-xs font-bold text-zinc-800 mb-1">Attach Photo Evidence</label>
-            <div className="flex items-center gap-3">
-              <label className="flex-1 cursor-pointer flex items-center justify-center gap-2 p-3 border border-dashed border-zinc-300 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors">
-                <Camera className="w-4 h-4 text-zinc-600" />
-                <span className="text-xs font-medium text-zinc-700">
-                  {photo ? 'Replace Photo' : 'Upload or Take Photo'}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
-              </label>
-              {photoPreview && (
-                <div className="w-14 h-14 rounded-xl overflow-hidden border border-zinc-300 shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={photoPreview} alt="Issue attachment" className="w-full h-full object-cover" />
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Photo attachment with Click Photo & Upload */}
+          <PhotoCaptureInput
+            label="Attach Photo Evidence"
+            value={photo}
+            previewUrl={photoPreview}
+            onChange={(file, url) => {
+              setPhoto(file);
+              setPhotoPreview(url);
+            }}
+            captureMode="environment"
+            cameraButtonLabel="Click Photo (Camera)"
+            uploadButtonLabel="Upload from Gallery"
+            helperText="Snap a direct photo of the damage/site or pick an image"
+          />
 
           {errorMsg && (
             <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200">

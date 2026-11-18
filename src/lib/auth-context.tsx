@@ -3,13 +3,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Profile } from './types';
 import { supabase } from './supabase';
+import { 
+  getLiveSession, 
+  setLiveSession, 
+  clearLiveSession 
+} from './session';
 
 interface AuthContextType {
   user: Profile | null;
   role: 'admin' | 'employee' | null;
   isLoading: boolean;
   loginAdmin: (codeOrPhone: string, pin: string) => Promise<{ success: boolean; error?: string }>;
+  loginAdminWithPin: (pin: string) => Promise<{ success: boolean; error?: string }>;
   loginEmployee: (codeOrPhone: string, pin: string) => Promise<{ success: boolean; error?: string }>;
+  loginEmployeeWithPin: (pin: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   setUserDirect: (profile: Profile) => void;
 }
@@ -22,19 +29,98 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check saved session in localStorage
+    // 1. Check encrypted 24-hour live session ('24-live')
+    const activeSession = getLiveSession();
+    if (activeSession && activeSession.user && activeSession.role) {
+      setUser(activeSession.user);
+      setRole(activeSession.role);
+      setIsLoading(false);
+      return;
+    }
+
+    // 2. Legacy fallback check
     const savedUser = localStorage.getItem('trinity_user');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser) as Profile;
         setUser(parsed);
         setRole(parsed.role);
+        // Upgrade to 24-live encrypted session
+        setLiveSession(parsed, parsed.role);
       } catch {
-        localStorage.removeItem('trinity_user');
+        clearLiveSession();
       }
     }
     setIsLoading(false);
   }, []);
+
+  // PIN-only login for employee (Faster lookup & no ID input required)
+  const loginEmployeeWithPin = async (pin: string) => {
+    setIsLoading(true);
+    try {
+      const cleanPin = pin.trim();
+      if (!cleanPin) {
+        setIsLoading(false);
+        return { success: false, error: 'Please enter your PIN' };
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'employee')
+        .eq('pin_hash', cleanPin)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        setIsLoading(false);
+        return { success: false, error: 'Incorrect Employee PIN' };
+      }
+
+      setUser(data);
+      setRole('employee');
+      setLiveSession(data, 'employee');
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err.message || 'Login failed' };
+    }
+  };
+
+  // PIN-only login for admin
+  const loginAdminWithPin = async (pin: string) => {
+    setIsLoading(true);
+    try {
+      const cleanPin = pin.trim();
+      if (!cleanPin) {
+        setIsLoading(false);
+        return { success: false, error: 'Please enter Admin PIN' };
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'admin')
+        .eq('pin_hash', cleanPin)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        setIsLoading(false);
+        return { success: false, error: 'Incorrect Admin PIN' };
+      }
+
+      setUser(data);
+      setRole('admin');
+      setLiveSession(data, 'admin');
+      setIsLoading(false);
+      return { success: true };
+    } catch (err: any) {
+      setIsLoading(false);
+      return { success: false, error: err.message || 'Login failed' };
+    }
+  };
 
   const loginAdmin = async (codeOrPhone: string, pin: string) => {
     setIsLoading(true);
@@ -59,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(data);
       setRole('admin');
-      localStorage.setItem('trinity_user', JSON.stringify(data));
+      setLiveSession(data, 'admin');
       setIsLoading(false);
       return { success: true };
     } catch (err: any) {
@@ -91,7 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(data);
       setRole('employee');
-      localStorage.setItem('trinity_user', JSON.stringify(data));
+      setLiveSession(data, 'employee');
       setIsLoading(false);
       return { success: true };
     } catch (err: any) {
@@ -103,13 +189,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setRole(null);
-    localStorage.removeItem('trinity_user');
+    clearLiveSession();
   };
 
   const setUserDirect = (profile: Profile) => {
     setUser(profile);
     setRole(profile.role);
-    localStorage.setItem('trinity_user', JSON.stringify(profile));
+    setLiveSession(profile, profile.role);
   };
 
   return (
@@ -119,7 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         isLoading,
         loginAdmin,
+        loginAdminWithPin,
         loginEmployee,
+        loginEmployeeWithPin,
         logout,
         setUserDirect,
       }}
@@ -136,4 +224,3 @@ export function useAuth() {
   }
   return context;
 }
-

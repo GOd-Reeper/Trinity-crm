@@ -1,12 +1,25 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Dumbbell, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export default function HomePage() {
-  const { user, role } = useAuth();
+  const router = useRouter();
+  const { user, role, isLoading } = useAuth();
+
+  // If user has active 24-live session, automatically direct to their dashboard
+  useEffect(() => {
+    if (!isLoading && user && role) {
+      if (role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/employee');
+      }
+    }
+  }, [user, role, isLoading, router]);
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white flex flex-col justify-between items-center p-6 relative selection:bg-teal-500 selection:text-white">

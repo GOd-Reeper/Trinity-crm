@@ -21,7 +21,9 @@ import {
   XCircle,
   Check,
   RotateCcw,
-  Eye
+  Eye,
+  SlidersHorizontal,
+  Search
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ClassSession, ClassStatus, Client, Profile } from '@/lib/types';
@@ -55,6 +57,12 @@ export default function AdminClassesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProofPhoto, setSelectedProofPhoto] = useState<string | null>(null);
 
+  // Slide Drawer State for All Scheduled Classes
+  const [showSlideDrawer, setShowSlideDrawer] = useState(false);
+  const [allScheduledClasses, setAllScheduledClasses] = useState<ClassSession[]>([]);
+  const [slideSearch, setSlideSearch] = useState('');
+  const [slideTrainerFilter, setSlideTrainerFilter] = useState('all');
+
   // Filters
   const [todayIST, setTodayIST] = useState<string>('');
   const [filterDate, setFilterDate] = useState<string>('');
@@ -83,11 +91,26 @@ export default function AdminClassesPage() {
   const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const fetchAllScheduledClasses = async () => {
+    const today = getTodayIST();
+    const { data } = await supabase
+      .from('classes')
+      .select(`*, client:clients(*), employee:profiles(*)`)
+      .gte('class_date', today)
+      .order('class_date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (data) {
+      setAllScheduledClasses(data);
+    }
+  };
+
   useEffect(() => {
     const today = getTodayIST();
     setTodayIST(today);
     setFilterDate(today);
     setClassDate(today);
+    fetchAllScheduledClasses();
   }, []);
 
   const fetchData = async () => {
@@ -201,6 +224,8 @@ export default function AdminClassesPage() {
 
       setShowAddModal(false);
       fetchData();
+      await fetchAllScheduledClasses();
+      setShowSlideDrawer(true);
     } catch (err: any) {
       alert(err.message || 'Failed to schedule class');
     } finally {
@@ -311,13 +336,25 @@ export default function AdminClassesPage() {
             Schedule 1-hour sessions, assign trainers in IST time (AM/PM), reschedule, and review travel proofs.
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 active:scale-[0.99] cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Schedule New Session</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              fetchAllScheduledClasses();
+              setShowSlideDrawer(true);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-teal-400 hover:text-white hover:bg-zinc-800 font-bold text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer transition-all"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-teal-400" />
+            <span>All Scheduled Classes Slide ({allScheduledClasses.length})</span>
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-teal-500 text-zinc-950 hover:bg-teal-400 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20 active:scale-[0.99] cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Schedule New Session</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -876,6 +913,185 @@ export default function AdminClassesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Slide Drawer for All Scheduled Classes */}
+      {showSlideDrawer && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowSlideDrawer(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 transition-opacity"
+          />
+
+          {/* Drawer Panel */}
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col border-l border-zinc-200 animate-in slide-in-from-right duration-300">
+            {/* Slide Header */}
+            <div className="p-4 sm:p-5 bg-zinc-950 text-white flex items-center justify-between border-b border-zinc-800 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center">
+                  <SlidersHorizontal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-white">All Scheduled Classes</h2>
+                  <p className="text-[11px] text-zinc-400">
+                    {allScheduledClasses.length} upcoming sessions across all dates
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSlideDrawer(false)}
+                className="p-1.5 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Slide Filter Bar */}
+            <div className="p-3 bg-zinc-50 border-b border-zinc-200/80 space-y-2 shrink-0">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search by client name..."
+                  value={slideSearch}
+                  onChange={(e) => setSlideSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-zinc-300 rounded-xl text-zinc-900 placeholder-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <select
+                  value={slideTrainerFilter}
+                  onChange={(e) => setSlideTrainerFilter(e.target.value)}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-zinc-300 rounded-xl text-zinc-800 font-medium"
+                >
+                  <option value="all">All Trainers</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name} ({emp.employee_code})
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={fetchAllScheduledClasses}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-zinc-200/80 text-zinc-700 hover:bg-zinc-300 transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Slide Classes List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {(() => {
+                const filtered = allScheduledClasses.filter((cls) => {
+                  const matchesSearch = !slideSearch || cls.client?.full_name?.toLowerCase().includes(slideSearch.toLowerCase());
+                  const matchesTrainer = slideTrainerFilter === 'all' || cls.employee_id === slideTrainerFilter;
+                  return matchesSearch && matchesTrainer;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="py-16 text-center text-zinc-400 space-y-2">
+                      <CalendarDays className="w-10 h-10 mx-auto text-zinc-300" />
+                      <p className="text-xs font-bold text-zinc-700">No scheduled sessions found</p>
+                      <p className="text-[11px] text-zinc-400">
+                        {slideSearch ? 'Try a different search keyword.' : 'Schedule a new class to see it appear here.'}
+                      </p>
+                    </div>
+                  );
+                }
+
+                // Group by class_date
+                const dateMap: { [d: string]: ClassSession[] } = {};
+                filtered.forEach((c) => {
+                  if (!dateMap[c.class_date]) dateMap[c.class_date] = [];
+                  dateMap[c.class_date].push(c);
+                });
+
+                return Object.keys(dateMap).map((dKey) => {
+                  const daySessions = dateMap[dKey];
+                  const isToday = dKey === todayIST;
+
+                  return (
+                    <div key={dKey} className="space-y-2">
+                      <div className="sticky top-0 bg-white/95 backdrop-blur-xs py-1 z-10 flex items-center justify-between border-b border-zinc-100">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                          <span className="text-xs font-black text-zinc-900">
+                            {isToday ? 'Today • ' : ''}{formatDateIST(dKey)}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
+                          {daySessions.length} {daySessions.length === 1 ? 'class' : 'classes'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {daySessions.map((session) => (
+                          <div
+                            key={session.id}
+                            className="p-3 rounded-2xl border border-zinc-200/90 bg-zinc-50/50 hover:bg-zinc-100/70 transition-colors space-y-2"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="text-xs font-extrabold text-zinc-950">
+                                  {session.client?.full_name || 'Client'}
+                                </h4>
+                                <p className="text-[11px] text-zinc-500 mt-0.5">
+                                  Trainer: <span className="font-semibold text-zinc-800">{session.employee?.full_name || 'Unassigned'}</span>
+                                </p>
+                              </div>
+                              <span className="text-[11px] font-black px-2 py-1 rounded-xl bg-teal-500/15 text-teal-800 border border-teal-500/30 shrink-0">
+                                {formatTime12Hour(session.start_time)}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-1 border-t border-zinc-200/60 text-[11px]">
+                              <span className={`capitalize font-bold px-2 py-0.5 rounded-full text-[10px] ${
+                                session.status === 'completed'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : session.status === 'in_progress'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : session.status === 'cancelled'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-zinc-200/70 text-zinc-700'
+                              }`}>
+                                {session.status}
+                              </span>
+
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    setShowSlideDrawer(false);
+                                    openEditModal(session);
+                                  }}
+                                  className="text-teal-600 hover:text-teal-800 font-bold hover:underline cursor-pointer"
+                                >
+                                  Edit
+                                </button>
+                                <span className="text-zinc-300">•</span>
+                                <button
+                                  onClick={() => handleQuickCancel(session)}
+                                  className="text-zinc-500 hover:text-red-600 font-medium hover:underline cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
